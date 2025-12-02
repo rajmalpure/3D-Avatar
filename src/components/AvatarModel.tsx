@@ -1,0 +1,110 @@
+import { useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
+import { useStore } from '../state/useStore'
+import * as THREE from 'three'
+
+type AvatarModelProps = {
+  modelPath?: string
+  mousePosition: { x: number; y: number }
+}
+
+export function AvatarModel({ mousePosition }: AvatarModelProps) {
+  const groupRef = useRef<THREE.Group>(null!)
+  const headRef = useRef<THREE.Mesh>(null!)
+  const mouthRef = useRef<THREE.Mesh>(null!)
+  const leftEyeRef = useRef<THREE.Mesh>(null!)
+  const rightEyeRef = useRef<THREE.Mesh>(null!)
+  
+  const { currentViseme, avatarExpression, isAvatarSpeaking } = useStore()
+  
+  // Animation loop
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime()
+    
+    // Head movement - follow mouse
+    if (headRef.current) {
+      const targetX = mousePosition.x * 0.3
+      const targetY = mousePosition.y * 0.2
+      
+      headRef.current.rotation.y = THREE.MathUtils.lerp(
+        headRef.current.rotation.y,
+        targetX,
+        0.05
+      )
+      headRef.current.rotation.x = THREE.MathUtils.lerp(
+        headRef.current.rotation.x,
+        -targetY,
+        0.05
+      )
+    }
+    
+    // Idle breathing animation
+    if (groupRef.current && !isAvatarSpeaking) {
+      groupRef.current.position.y = Math.sin(time * 2) * 0.02
+    }
+    
+    // Blinking animation
+    const blinkSpeed = 0.3
+    const blinkCycle = (time * blinkSpeed) % 5
+    const blinkValue = blinkCycle < 0.15 ? 1 - (blinkCycle / 0.15) * 0.8 : 1
+    
+    if (leftEyeRef.current) {
+      leftEyeRef.current.scale.y = blinkValue
+    }
+    if (rightEyeRef.current) {
+      rightEyeRef.current.scale.y = blinkValue
+    }
+    
+    // Mouth opening (lip sync)
+    if (mouthRef.current) {
+      const mouthOpenness = currentViseme * 0.5
+      mouthRef.current.scale.y = 1 + mouthOpenness
+      
+      // Expression-based changes
+      if (avatarExpression === 'happy') {
+        mouthRef.current.scale.x = 1.2
+      } else {
+        mouthRef.current.scale.x = 1
+      }
+    }
+    
+    // Speaking animation - subtle head bob
+    if (groupRef.current && isAvatarSpeaking) {
+      groupRef.current.position.y = Math.sin(time * 8) * 0.01
+    }
+  })
+  
+  return (
+    <group ref={groupRef}>
+      {/* Head */}
+      <mesh ref={headRef}>
+        <sphereGeometry args={[1, 32, 32]} />
+        <meshStandardMaterial color="#ffdbac" />
+      </mesh>
+      
+      {/* Left Eye */}
+      <mesh ref={leftEyeRef} position={[-0.3, 0.2, 0.8]}>
+        <sphereGeometry args={[0.15, 16, 16]} />
+        <meshStandardMaterial color="#000000" />
+      </mesh>
+      
+      {/* Right Eye */}
+      <mesh ref={rightEyeRef} position={[0.3, 0.2, 0.8]}>
+        <sphereGeometry args={[0.15, 16, 16]} />
+        <meshStandardMaterial color="#000000" />
+      </mesh>
+      
+      {/* Mouth */}
+      <mesh ref={mouthRef} position={[0, -0.3, 0.85]}>
+        <boxGeometry args={[0.4, 0.1, 0.1]} />
+        <meshStandardMaterial color="#ff6b6b" />
+      </mesh>
+      
+      {/* Body */}
+      <mesh position={[0, -1.5, 0]}>
+        <cylinderGeometry args={[0.6, 0.8, 1.5, 32]} />
+        <meshStandardMaterial color="#4a90e2" />
+      </mesh>
+    </group>
+  )
+}

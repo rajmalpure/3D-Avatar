@@ -1,0 +1,24 @@
+# Avatar Model Placeholder
+
+This file indicates where the 3D avatar model should be placed.
+
+## Required File
+`avatar-default.glb` - Your 3D avatar model in GLB format
+
+## How to Add
+
+See [AVATAR_SETUP.md](../AVATAR_SETUP.md) for detailed instructions.
+
+Quick options:
+1. Create avatar at https://readyplayer.me/
+2. Download free models from https://sketchfab.com/
+3. Use sample models from https://www.mixamo.com/
+
+Once you have a GLB file, place it here as `avatar-default.glb`
+
+## File Structure
+```
+public/
+├── avatar-default.glb  <-- Place your model here
+└── .gitkeep            <-- This file
+```
