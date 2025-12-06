@@ -6,7 +6,7 @@ export class GeminiLLM implements LLMProvider {
 
   constructor(apiKey?: string) {
     this.apiKey = apiKey || import.meta.env.VITE_GEMINI_API_KEY || ''
-    this.model = import.meta.env.VITE_GEMINI_MODEL || 'gemini-pro'
+    this.model = import.meta.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash'
   }
 
   isSupported(): boolean {
@@ -37,7 +37,7 @@ export class GeminiLLM implements LLMProvider {
       })
 
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${this.apiKey}`,
+        `https://generativelanguage.googleapis.com/v1/models/${this.model}:generateContent?key=${this.apiKey}`,
         {
           method: 'POST',
           headers: {
