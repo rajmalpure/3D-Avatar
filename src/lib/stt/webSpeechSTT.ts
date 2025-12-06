@@ -28,27 +28,43 @@ export class WebSpeechSTT implements STTProvider {
     this.recognition.continuous = options.continuous ?? false
     this.recognition.interimResults = options.interimResults ?? true
 
+    this.recognition.onstart = () => {
+      console.log('Speech recognition started')
+      this.isRecognizing = true
+      options.onStart?.()
+    }
+
     this.recognition.onresult = (event: any) => {
+      console.log('Speech recognition result:', event)
       const results = event.results
       const lastResult = results[results.length - 1]
       const transcript = lastResult[0].transcript
       const isFinal = lastResult.isFinal
 
+      console.log('Transcript:', transcript, 'Final:', isFinal)
       options.onResult?.(transcript, isFinal)
     }
 
     this.recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error)
       options.onError?.(event.error)
       this.isRecognizing = false
     }
 
     this.recognition.onend = () => {
+      console.log('Speech recognition ended')
       this.isRecognizing = false
       options.onEnd?.()
     }
 
-    this.recognition.start()
-    this.isRecognizing = true
+    try {
+      this.recognition.start()
+      console.log('Starting speech recognition...')
+    } catch (error) {
+      console.error('Failed to start recognition:', error)
+      this.isRecognizing = false
+      throw error
+    }
   }
 
   stopListening(): void {

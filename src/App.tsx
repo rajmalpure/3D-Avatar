@@ -89,6 +89,14 @@ function App() {
       setIsAvatarSpeaking(true)
       setAvatarExpression('speaking')
 
+      // Simulate lip sync with random viseme values during speech
+      const lipSyncInterval = setInterval(() => {
+        const { setCurrentViseme } = useStore.getState()
+        // Random mouth movement to simulate speech
+        const visemeValue = 0.3 + Math.random() * 0.7
+        setCurrentViseme(visemeValue)
+      }, 100)
+
       await ttsProvider.speak(text, {
         voice: settings.ttsVoice,
         rate: settings.ttsSpeed,
@@ -98,14 +106,21 @@ function App() {
           setAvatarExpression('speaking')
         },
         onEnd: () => {
+          clearInterval(lipSyncInterval)
+          const { setCurrentViseme } = useStore.getState()
+          setCurrentViseme(0)
           setIsAvatarSpeaking(false)
           setAvatarExpression('neutral')
         }
       })
+
+      clearInterval(lipSyncInterval)
     } catch (error) {
       console.error('TTS error:', error)
       setIsAvatarSpeaking(false)
       setAvatarExpression('neutral')
+      const { setCurrentViseme } = useStore.getState()
+      setCurrentViseme(0)
     }
   }
 
