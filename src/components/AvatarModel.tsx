@@ -1,5 +1,6 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { useGLTF } from '@react-three/drei'
 import { useStore } from '../state/useStore'
 import * as THREE from 'three'
 
@@ -8,19 +9,66 @@ type AvatarModelProps = {
   mousePosition: { x: number; y: number }
 }
 
-export function AvatarModel({ mousePosition }: AvatarModelProps) {
+export function AvatarModel({ modelPath = '/avatar-default.glb', mousePosition }: AvatarModelProps) {
   const groupRef = useRef<THREE.Group>(null!)
   const headRef = useRef<THREE.Mesh>(null!)
   const mouthRef = useRef<THREE.Mesh>(null!)
   const leftEyeRef = useRef<THREE.Mesh>(null!)
   const rightEyeRef = useRef<THREE.Mesh>(null!)
+  const gltfGroupRef = useRef<THREE.Group>(null!)
   
+  const [useGeometric, setUseGeometric] = useState(false)
   const { currentViseme, avatarExpression, isAvatarSpeaking } = useStore()
+  
+  // Try to load GLTF model
+  let gltf: any
+  try {
+    gltf = useGLTF(modelPath)
+  } catch (error) {
+    console.warn('Failed to load GLTF model, using geometric fallback:', error)
+    if (!useGeometric) setUseGeometric(true)
+    gltf = null
+  }
   
   // Animation loop
   useFrame((state) => {
     const time = state.clock.getElapsedTime()
     
+    // GLTF model animations
+    if (gltf && gltfGroupRef.current && !useGeometric) {
+      // Rotate the entire GLTF model based on mouse
+      const targetX = mousePosition.x * 0.3
+      const targetY = mousePosition.y * 0.2
+      
+      gltfGroupRef.current.rotation.y = THREE.MathUtils.lerp(
+        gltfGroupRef.current.rotation.y,
+        targetX,
+        0.05
+      )
+      gltfGroupRef.current.rotation.x = THREE.MathUtils.lerp(
+        gltfGroupRef.current.rotation.x,
+        -targetY,
+        0.05
+      )
+      
+      // Breathing animation
+      gltfGroupRef.current.position.y = Math.sin(time * 2) * 0.02
+      
+      // Try to animate blend shapes if available
+      gltf.scene.traverse((child: any) => {
+        if (child.isMesh && child.morphTargetInfluences) {
+          // Lip sync with visemes
+          const visemeIndex = Math.floor(currentViseme * child.morphTargetInfluences.length)
+          child.morphTargetInfluences.forEach((_: number, index: number) => {
+            child.morphTargetInfluences[index] = index === visemeIndex ? currentViseme : 0
+          })
+        }
+      })
+      
+      return
+    }
+    
+    // Geometric avatar animations (fallback)
     // Head movement - follow mouse
     if (headRef.current) {
       const targetX = mousePosition.x * 0.3
@@ -74,6 +122,16 @@ export function AvatarModel({ mousePosition }: AvatarModelProps) {
     }
   })
   
+  // If GLTF loaded successfully and we're not using geometric fallback
+  if (gltf && !useGeometric) {
+    return (
+      <group ref={gltfGroupRef}>
+        <primitive object={gltf.scene} scale={1.5} />
+      </group>
+    )
+  }
+  
+  // Geometric avatar fallback
   return (
     <group ref={groupRef}>
       {/* Head */}
@@ -108,3 +166,6 @@ export function AvatarModel({ mousePosition }: AvatarModelProps) {
     </group>
   )
 }
+
+// Preload the GLTF model
+useGLTF.preload('/avatar-default.glb')
