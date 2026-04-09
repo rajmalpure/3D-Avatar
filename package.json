@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "3D AI Avatar Assistant with voice interaction and lip sync",
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

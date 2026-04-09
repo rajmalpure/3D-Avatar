@@ -27,7 +27,7 @@ function App() {
   
   const ttsProviderRef = useRef<TTSProvider | null>(null)
   const llmProviderRef = useRef<LLMProvider | null>(null)
-  const lipSyncIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const lipSyncIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Initialize providers
   useEffect(() => {
@@ -124,7 +124,7 @@ function App() {
         // Random mouth movement to simulate speech
         const visemeValue = 0.3 + Math.random() * 0.7
         setCurrentViseme(visemeValue)
-      }, 100) as unknown as NodeJS.Timeout
+      }, 100) as ReturnType<typeof setInterval>
 
       await ttsProvider.speak(text, {
         voice: settings.ttsVoice,

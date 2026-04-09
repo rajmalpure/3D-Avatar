@@ -34,7 +34,7 @@ export class LocalLLM implements LLMProvider {
     return true
   }
 
-  async chat(message: string, conversationHistory?: Array<{role: string, content: string}>, systemPrompt?: string): Promise<string> {
+  async chat(message: string, _conversationHistory?: Array<{role: string, content: string}>, _systemPrompt?: string): Promise<string> {
     // Simple pattern matching for common queries
     const lowerMessage = message.toLowerCase()
 

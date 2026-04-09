@@ -5,7 +5,15 @@ const mockSpeechSynthesis = {
   speak: vi.fn(),
   cancel: vi.fn(),
   getVoices: vi.fn(() => [] as SpeechSynthesisVoice[]),
-  speaking: false
+  speaking: false,
+  paused: false,
+  pending: false,
+  pause: vi.fn(),
+  resume: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  dispatchEvent: vi.fn(),
+  onvoiceschanged: null,
 }
 
 // @ts-ignore
