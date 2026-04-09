@@ -40,7 +40,7 @@ A production-ready, interactive 3D AI avatar web application with voice interact
 
 ## Live demo
 
--{3D-Avatar][https://3-d-avatar-rose.vercel.app/]
+-{3D-Avatar](https://3-d-avatar-rose.vercel.app/)
 
 ## 🚀 Quick Start
 
