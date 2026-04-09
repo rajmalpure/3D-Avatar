@@ -486,5 +486,4 @@ MIT License - feel free to use in your projects!
 ---
 
 **Built with ❤️ using React, Three.js, and modern web technologies**
-#   3 D - A v a t a r  
- 
+#
