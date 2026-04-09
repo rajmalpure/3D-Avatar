@@ -33,10 +33,14 @@ A production-ready, interactive 3D AI avatar web application with voice interact
 ## 📋 Prerequisites
 
 - **Node.js** 18+ and npm/yarn/pnpm
-- Modern browser with:
+- - Modern browser with:
   - WebGL support (for 3D rendering)
   - Web Speech API support (Chrome, Edge, Safari recommended)
   - Microphone access (for voice input)
+
+## Live demo
+
+-{3D-Avatar][https://3-d-avatar-rose.vercel.app/]
 
 ## 🚀 Quick Start
 
