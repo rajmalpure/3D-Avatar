@@ -126,6 +126,20 @@ export function SettingsPanel({ ttsProvider }: SettingsPanelProps) {
             </small>
           </div>
 
+          {/* AI Persona */}
+          <div className="setting-group">
+            <label>AI Persona</label>
+            <select 
+              value={settings.persona}
+              onChange={(e) => updateSettings({ persona: e.target.value })}
+            >
+              <option value="helpful">Helpful Assistant</option>
+              <option value="sarcastic">Sarcastic Robot</option>
+              <option value="expert">Professional Expert</option>
+              <option value="pirate">Pirate Captain</option>
+            </select>
+          </div>
+
           {/* Avatar Model */}
           <div className="setting-group">
             <label>Avatar Model</label>

@@ -5,8 +5,9 @@ export class GeminiLLM implements LLMProvider {
   private model: string
 
   constructor(apiKey?: string) {
-    this.apiKey = apiKey || import.meta.env.VITE_GEMINI_API_KEY || ''
-    this.model = import.meta.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash'
+    const rawKey = apiKey || import.meta.env.VITE_GEMINI_API_KEY || ''
+    this.apiKey = rawKey.replace(/["']/g, '').trim()
+    this.model = import.meta.env.VITE_GEMINI_MODEL?.replace(/["']/g, '').trim() || 'gemini-1.5-flash'
   }
 
   isSupported(): boolean {
@@ -15,7 +16,8 @@ export class GeminiLLM implements LLMProvider {
 
   async chat(
     message: string,
-    conversationHistory: Array<{role: string, content: string}> = []
+    conversationHistory: Array<{role: string, content: string}> = [],
+    systemPrompt?: string
   ): Promise<string> {
     if (!this.isSupported()) {
       throw new Error('Gemini API key is not configured')
@@ -44,10 +46,11 @@ export class GeminiLLM implements LLMProvider {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            ...(systemPrompt ? { systemInstruction: { parts: [{ text: systemPrompt }] } } : {}),
             contents,
             generationConfig: {
               temperature: 0.7,
-              maxOutputTokens: 150,
+              maxOutputTokens: 2048,
               topP: 0.8,
               topK: 40
             },

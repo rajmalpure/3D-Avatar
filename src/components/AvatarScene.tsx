@@ -23,7 +23,7 @@ export function AvatarScene() {
       style={{ width: '100%', height: '100%' }}
     >
       <Canvas shadows>
-        <PerspectiveCamera makeDefault position={[0, 1.5, 3]} />
+        <PerspectiveCamera makeDefault position={[0, 1.6, 3.2]} />
         
         {/* Lighting */}
         <ambientLight intensity={0.5} />

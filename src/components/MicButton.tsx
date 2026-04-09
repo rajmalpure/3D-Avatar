@@ -4,80 +4,100 @@ import { WebSpeechSTT } from '../lib/stt/webSpeechSTT'
 
 type MicButtonProps = {
   onTranscript: (text: string) => void
+  onStartListening?: () => void
 }
 
-export function MicButton({ onTranscript }: MicButtonProps) {
+export function MicButton({ onTranscript, onStartListening }: MicButtonProps) {
   const [isRecording, setIsRecording] = useState(false)
   const [interimTranscript, setInterimTranscript] = useState('')
   const sttRef = useRef<WebSpeechSTT | null>(null)
   
   const { setIsListening, isProcessing } = useStore()
 
+  const isIntentionalStopRef = useRef(false)
+  const isRecordingRef = useRef(false)
+
+  // Sync ref with state for callbacks
+  useEffect(() => {
+    isRecordingRef.current = isRecording
+  }, [isRecording])
+
   useEffect(() => {
     sttRef.current = new WebSpeechSTT()
     
     return () => {
-      if (sttRef.current && isRecording) {
+      if (sttRef.current && isRecordingRef.current) {
         sttRef.current.stopListening()
       }
     }
   }, [])
 
+  const startListeningInternal = async () => {
+    if (!sttRef.current || !sttRef.current.isSupported()) {
+      alert('Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.')
+      setIsRecording(false)
+      setIsListening(false)
+      return
+    }
+
+    try {
+      await sttRef.current.startListening({
+        language: 'en-US',
+        continuous: true,
+        interimResults: true,
+        onResult: (transcript, isFinal) => {
+          if (isFinal) {
+            onTranscript(transcript)
+            setInterimTranscript('')
+          } else {
+            setInterimTranscript(transcript)
+          }
+        },
+        onError: (error) => {
+          console.error('Speech recognition error:', error)
+          if (error === 'not-allowed') {
+            isIntentionalStopRef.current = true
+            setIsRecording(false)
+            setIsListening(false)
+            setInterimTranscript('')
+            alert('Microphone access denied. Please allow microphone access in your browser settings.')
+          }
+        },
+        onEnd: () => {
+          if (isRecordingRef.current && !isIntentionalStopRef.current) {
+            console.log('Ambient mode: restarting microphone...')
+            setTimeout(() => startListeningInternal(), 100)
+          } else {
+            setIsRecording(false)
+            setIsListening(false)
+            setInterimTranscript('')
+          }
+        }
+      })
+    } catch (error) {
+      console.error('Failed to start recording:', error)
+      setIsRecording(false)
+      setIsListening(false)
+    }
+  }
+
   const handleMicClick = async () => {
     if (!sttRef.current) return
 
     if (isRecording) {
-      // Stop recording
+      // Stop ambient recording
+      isIntentionalStopRef.current = true
       sttRef.current.stopListening()
       setIsRecording(false)
       setIsListening(false)
       setInterimTranscript('')
     } else {
-      // Start recording
-      if (!sttRef.current.isSupported()) {
-        alert('Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.')
-        return
-      }
-
-      try {
-        setIsRecording(true)
-        setIsListening(true)
-        
-        await sttRef.current.startListening({
-          language: 'en-US',
-          continuous: false,
-          interimResults: true,
-          onResult: (transcript, isFinal) => {
-            if (isFinal) {
-              onTranscript(transcript)
-              setIsRecording(false)
-              setIsListening(false)
-              setInterimTranscript('')
-            } else {
-              setInterimTranscript(transcript)
-            }
-          },
-          onError: (error) => {
-            console.error('Speech recognition error:', error)
-            setIsRecording(false)
-            setIsListening(false)
-            setInterimTranscript('')
-            
-            if (error === 'not-allowed') {
-              alert('Microphone access denied. Please allow microphone access in your browser settings.')
-            }
-          },
-          onEnd: () => {
-            setIsRecording(false)
-            setIsListening(false)
-            setInterimTranscript('')
-          }
-        })
-      } catch (error) {
-        console.error('Failed to start recording:', error)
-        setIsRecording(false)
-        setIsListening(false)
-      }
+      // Start ambient recording
+      isIntentionalStopRef.current = false
+      setIsRecording(true)
+      setIsListening(true)
+      onStartListening?.()
+      startListeningInternal()
     }
   }
 

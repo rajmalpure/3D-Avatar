@@ -34,7 +34,7 @@ export class LocalLLM implements LLMProvider {
     return true
   }
 
-  async chat(message: string): Promise<string> {
+  async chat(message: string, conversationHistory?: Array<{role: string, content: string}>, systemPrompt?: string): Promise<string> {
     // Simple pattern matching for common queries
     const lowerMessage = message.toLowerCase()
 
@@ -64,7 +64,10 @@ export class LocalLLM implements LLMProvider {
 
     // Default response with echo
     const response = this.getRandomResponse(this.responses)
-    return `${response} You mentioned: "${message}". This is a local response since no external LLM is configured. To enable advanced AI responses, configure OpenAI API key in your environment settings.`
+    const emotionTags = ['[HAPPY]', '[THINKING]', '[NEUTRAL]']
+    const randomEmotion = emotionTags[Math.floor(Math.random() * emotionTags.length)]
+    
+    return `${randomEmotion} ${response} You mentioned: "${message}". This is a local response since no external LLM is configured. To enable advanced AI responses, configure OpenAI API key in your environment settings.`
   }
 
   private getRandomResponse(responses: string[]): string {

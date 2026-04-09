@@ -108,11 +108,29 @@ export function AvatarModel({ modelPath = '/avatar-default.glb', mousePosition }
       const mouthOpenness = currentViseme * 0.5
       mouthRef.current.scale.y = 1 + mouthOpenness
       
+      // Reset defaults
+      mouthRef.current.scale.x = 1
+      mouthRef.current.position.y = -0.3
+      if (leftEyeRef.current) leftEyeRef.current.rotation.z = 0
+      if (rightEyeRef.current) rightEyeRef.current.rotation.z = 0
+      if (leftEyeRef.current) { leftEyeRef.current.scale.x = 1; leftEyeRef.current.scale.z = 1 }
+      if (rightEyeRef.current) { rightEyeRef.current.scale.x = 1; rightEyeRef.current.scale.z = 1 }
+      
       // Expression-based changes
       if (avatarExpression === 'happy') {
         mouthRef.current.scale.x = 1.2
-      } else {
-        mouthRef.current.scale.x = 1
+      } else if (avatarExpression === 'sad') {
+        mouthRef.current.scale.x = 0.8
+        mouthRef.current.position.y = -0.32
+      } else if (avatarExpression === 'surprised') {
+        mouthRef.current.scale.x = 0.5
+        mouthRef.current.scale.y = 1 + mouthOpenness + 0.3
+        if (leftEyeRef.current) { leftEyeRef.current.scale.x = 1.3; leftEyeRef.current.scale.z = 1.3 }
+        if (rightEyeRef.current) { rightEyeRef.current.scale.x = 1.3; rightEyeRef.current.scale.z = 1.3 }
+      } else if (avatarExpression === 'angry') {
+        mouthRef.current.scale.x = 0.9
+        if (leftEyeRef.current) leftEyeRef.current.rotation.z = -0.2
+        if (rightEyeRef.current) rightEyeRef.current.rotation.z = 0.2
       }
     }
     

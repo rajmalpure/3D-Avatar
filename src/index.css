@@ -47,43 +47,19 @@ body {
 .app {
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-}
-
-.app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  z-index: 10;
-}
-
-.app-header h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.app-content {
-  flex: 1;
-  display: flex;
+  position: relative; /* required for full-screen children */
   overflow: hidden;
-  position: relative;
+  background: var(--bg-primary);
 }
 
-/* Avatar Container */
-.avatar-container {
-  flex: 1;
-  position: relative;
-  background: radial-gradient(circle at center, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+.avatar-container.full-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+  background: radial-gradient(circle at center, #1a2332 0%, #0a0e1a 100%);
 }
 
 .avatar-scene {
@@ -91,13 +67,152 @@ body {
   height: 100%;
 }
 
-/* Chat Container */
-.chat-container {
-  width: 400px;
-  background: var(--bg-secondary);
-  border-left: 1px solid var(--border-color);
+.ui-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none; /* Let pointer events pass to 3D canvas by default */
   display: flex;
   flex-direction: column;
+}
+
+/* Make inner elements clickable */
+.ui-layer > * {
+  pointer-events: auto;
+}
+
+/* HUD Positions */
+.hud-top-left {
+  position: absolute;
+  top: 1.5rem;
+  left: 2rem;
+  z-index: 20;
+}
+
+.hud-logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 15px rgba(0, 217, 255, 0.4);
+}
+
+.hud-top-right {
+  position: absolute;
+  top: 1.5rem;
+  right: 2rem;
+  z-index: 20;
+}
+
+.hud-mid-right {
+  position: absolute;
+  top: 50%;
+  right: 2rem;
+  transform: translateY(-50%);
+  z-index: 20;
+}
+
+.btn-chat-toggle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(10, 14, 26, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 217, 255, 0.3);
+  color: var(--neon-cyan);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.1);
+}
+
+.btn-chat-toggle svg {
+  width: 28px;
+  height: 28px;
+}
+
+.btn-chat-toggle:hover, .btn-chat-toggle.active {
+  background: rgba(0, 217, 255, 0.2);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 30px rgba(0, 217, 255, 0.4);
+  transform: scale(1.1);
+}
+
+/* Splash Screen */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 1s ease-in-out, visibility 1s;
+}
+
+.splash-screen.fade-out {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.splash-title {
+  font-size: 4rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: pulseLogo 2s infinite alternate;
+  margin-bottom: 2rem;
+}
+
+@keyframes pulseLogo {
+  0% { text-shadow: 0 0 20px rgba(0,217,255,0.2); }
+  100% { text-shadow: 0 0 60px rgba(0,217,255,0.6); }
+}
+
+.splash-loader {
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(0, 217, 255, 0.2);
+  border-top-color: var(--neon-cyan);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Chat Container Glass Panel */
+.chat-container.glass-panel {
+  position: absolute;
+  right: 2rem;
+  top: 6rem;
+  bottom: 2rem;
+  width: 420px;
+  background: rgba(10, 14, 26, 0.35);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 217, 255, 0.3);
+  border-radius: 1.5rem;
+  box-shadow: 0 0 40px rgba(0, 217, 255, 0.15), inset 0 0 20px rgba(0, 217, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.chat-container.glass-panel:hover {
+  border-color: rgba(0, 217, 255, 0.6);
+  box-shadow: 0 0 50px rgba(0, 217, 255, 0.3), inset 0 0 30px rgba(0, 217, 255, 0.1);
 }
 
 .chat-panel {
@@ -112,7 +227,8 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(0, 217, 255, 0.2);
 }
 
 .chat-header h2 {
@@ -216,10 +332,12 @@ body {
 }
 
 .chat-message.assistant .message-content {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
+  background: rgba(26, 35, 50, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(100, 150, 255, 0.4);
   color: var(--text-primary);
   border-bottom-left-radius: 0.25rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
 .message-time {
@@ -273,8 +391,8 @@ body {
   display: flex;
   gap: 0.75rem;
   padding: 1rem 1.5rem;
-  border-top: 1px solid var(--border-color);
-  background: var(--bg-primary);
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(0, 217, 255, 0.2);
 }
 
 .chat-input {
@@ -320,8 +438,8 @@ body {
 }
 
 /* Mic Button */
-.mic-container {
-  position: fixed;
+.floating-mic {
+  position: absolute;
   bottom: 2rem;
   left: 50%;
   transform: translateX(-50%);
@@ -336,39 +454,39 @@ body {
 }
 
 .mic-button {
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--neon-magenta), var(--neon-purple));
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(255, 0, 221, 0.4);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 0 30px rgba(0, 217, 255, 0.5);
   position: relative;
 }
 
 .mic-button::before {
   content: '';
   position: absolute;
-  inset: -4px;
+  inset: -6px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--neon-magenta), var(--neon-purple));
-  opacity: 0;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+  opacity: 0.4;
   transition: opacity 0.3s ease;
-  filter: blur(10px);
+  filter: blur(15px);
   z-index: -1;
 }
 
 .mic-button:hover::before {
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 .mic-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 30px rgba(255, 0, 221, 0.6);
+  transform: scale(1.15);
+  box-shadow: 0 0 50px rgba(0, 217, 255, 0.8);
 }
 
 .mic-button:disabled {
@@ -377,17 +495,14 @@ body {
 }
 
 .mic-button.recording {
-  animation: pulse 1.5s infinite;
-  background: linear-gradient(135deg, #ff4444, #ff0044);
+  animation: insanePulse 1.2s infinite;
+  background: linear-gradient(135deg, #ff0044, #ff00dd);
 }
 
-@keyframes pulse {
-  0%, 100% {
-    box-shadow: 0 4px 20px rgba(255, 0, 221, 0.4);
-  }
-  50% {
-    box-shadow: 0 4px 40px rgba(255, 0, 221, 0.8);
-  }
+@keyframes insanePulse {
+  0% { box-shadow: 0 0 20px rgba(255, 0, 85, 0.5); transform: scale(1); }
+  50% { box-shadow: 0 0 80px rgba(255, 0, 85, 1); transform: scale(1.25); }
+  100% { box-shadow: 0 0 20px rgba(255, 0, 85, 0.5); transform: scale(1); }
 }
 
 .mic-icon {
