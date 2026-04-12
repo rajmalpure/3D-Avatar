@@ -34,8 +34,8 @@ export function AvatarScene() {
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
         />
-        <pointLight position={[-5, 3, -5]} intensity={0.5} color="#4a90e2" />
-        <pointLight position={[5, 3, 5]} intensity={0.5} color="#e24a90" />
+        <pointLight position={[-5, 3, -5]} intensity={0.6} color="#00e676" />
+        <pointLight position={[5, 3, 5]} intensity={0.5} color="#ffd740" />
         
         {/* Avatar */}
         <Suspense fallback={null}>
