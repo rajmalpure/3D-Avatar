@@ -77,6 +77,7 @@ function App() {
         mode: settings.interviewMode,
         difficulty: settings.interviewDifficulty,
         targetCompany: settings.targetCompany,
+        resumeText: settings.resumeText,
       },
       questionSummary
     )

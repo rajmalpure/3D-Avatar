@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../state/useStore'
 import type { InterviewMode, InterviewDifficulty, TargetCompany } from '../state/useStore'
+import { extractTextFromPDF } from '../lib/utils/pdfParser'
 
 export function InterviewConfigPanel() {
   const { showSettings, setShowSettings, settings, updateSettings } = useStore()
@@ -10,6 +11,33 @@ export function InterviewConfigPanel() {
     }
     return []
   })
+  
+  const [isUploading, setIsUploading] = useState(false)
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      setIsUploading(true)
+      
+      let text = ''
+      if (file.type === 'application/pdf') {
+        text = await extractTextFromPDF(file)
+      } else {
+        text = await file.text()
+      }
+      
+      // Limit to ~3000 words logic safely
+      const limitedText = text.slice(0, 15000)
+      updateSettings({ resumeText: limitedText })
+    } catch (err) {
+      console.error('Error reading resume:', err)
+      alert('Failed to parse the resume file. Try again or use a .txt file.')
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   if (!showSettings) return null
 
@@ -25,6 +53,41 @@ export function InterviewConfigPanel() {
         </div>
 
         <div className="settings-content">
+        
+          {/* Resume Upload */}
+          <div className="setting-group resume-upload-group">
+            <label>📄 Resume / Context (Optional)</label>
+            <div className="resume-uploader">
+              {!settings.resumeText ? (
+                <>
+                  <input 
+                    type="file" 
+                    id="resume-upload" 
+                    accept=".pdf,.txt,.md" 
+                    onChange={handleFileUpload} 
+                    disabled={isUploading}
+                    className="file-input-hidden"
+                  />
+                  <label htmlFor="resume-upload" className="file-upload-btn">
+                    {isUploading ? '⏳ Parsing...' : 'Upload PDF or TXT'}
+                  </label>
+                  <span className="upload-hint">Upload your resume to get tailored questions.</span>
+                </>
+              ) : (
+                <div className="resume-loaded">
+                  <span className="loaded-icon">✅</span>
+                  <span className="loaded-text">Resume Loaded</span>
+                  <button 
+                    className="btn-remove-resume" 
+                    onClick={() => updateSettings({ resumeText: null })}
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          <hr className="divider" />
 
           {/* Interview Mode */}
           <div className="setting-group">

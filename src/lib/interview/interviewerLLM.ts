@@ -4,6 +4,7 @@ export interface InterviewConfig {
   mode: QuestionCategory | 'mixed'
   difficulty: Difficulty
   targetCompany: string
+  resumeText: string | null
 }
 
 export interface EvaluationResult {
@@ -20,6 +21,16 @@ export function buildInterviewerSystemPrompt(config: InterviewConfig, questionBa
     ? `The candidate is targeting ${config.targetCompany}. Tailor follow-up questions and evaluation style to match that company's known interview culture.`
     : ''
 
+  const resumeHint = config.resumeText 
+    ? `
+CANDIDATE'S RESUME / BACKGROUND INFO:
+--------------------------------------
+${config.resumeText}
+--------------------------------------
+CRITICAL INSTRUCTION: The candidate has provided their resume. You MUST prioritize asking questions related to the specific skills, projects, and experiences listed above. Challenge them on the technical decisions they made in their past roles. Use the QUESTION BANK below only as inspiration or if you run out of resume-specific questions.
+`
+    : ''
+
   const modeHint: Record<string, string> = {
     dsa: 'Focus on Data Structures & Algorithms. Ask about time/space complexity, edge cases, and multiple approaches.',
     'system-design': 'Focus on System Design. Probe for scalability, trade-offs, and real-world constraints.',
@@ -33,6 +44,7 @@ INTERVIEW CONFIGURATION:
 - Mode: ${config.mode.toUpperCase()} — ${modeHint[config.mode]}
 - Difficulty: ${config.difficulty.toUpperCase()} level
 ${companyHint}
+${resumeHint}
 
 AVAILABLE QUESTION BANK (use these as starting points, feel free to adapt):
 ${questionBank}
