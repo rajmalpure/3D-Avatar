@@ -16,6 +16,7 @@ PrepMate 3D elevates standard AI interview prep by introducing a tangible 3D int
 - **🎭 3D Avatar Interviewer** - Realistic 3D avatar with facial animations and emotional intelligence (happy, thinking, neutral).
 - **🧠 GenAI Intelligence** - Powered by Google Gemini 1.5 with structured output mapping to rate your answers dynamically.
 - **📄 Contextual Resume Parsing** - Upload your PDF resume natively in the browser (100% private). The AI dynamically adjusts its question bank to interrogate your specific past projects and tech stack.
+- **🕸️ Live Job Description Scraping** - Paste any Greenhouse, Lever, or LinkedIn job URL to automatically scrape the requirements. PrepMate 3D evaluates you strictly against that real-world, active job posting.
 - **🎤 Real-Time Voice Interaction** - Browser-native Speech-to-Text and Text-to-Speech API integration with perfectly mapped viseme lip-sync.
 - **📊 Real-Time Scoring HUD** - A futuristic dashboard displaying live timer, current question count, and a dynamic score ring based on the quality of your answers.
 - **📝 Comprehensive Session Summary** - On ending the session, receive an A-F grade, detailed strengths/improvements breakdown, and a per-question performance timeline.
@@ -28,6 +29,7 @@ PrepMate 3D elevates standard AI interview prep by introducing a tangible 3D int
 - **State Management:** Zustand
 - **GenAI Orchestration:** Google Gemini SDK (`@google/genai`)
 - **Document Processing:** `pdfjs-dist` (Client-side PDF extraction)
+- **Web Scraping:** Jina Reader API (`r.jina.ai`) for LLM-friendly Markdown extraction
 - **Voice APIs:** Web Speech API (STT & TTS)
 
 ## 📋 Prerequisites
