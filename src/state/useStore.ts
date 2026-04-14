@@ -33,6 +33,7 @@ type Settings = {
   interviewDifficulty: InterviewDifficulty
   targetCompany: TargetCompany
   resumeText: string | null
+  jobDescription: string | null
 }
 
 export type FeedbackEntry = {
@@ -151,6 +152,7 @@ export const useStore = create<AppState>()(
         interviewDifficulty: 'mid',
         targetCompany: 'general',
         resumeText: null,
+        jobDescription: null,
       },
       updateSettings: (newSettings) =>
         set((state) => ({

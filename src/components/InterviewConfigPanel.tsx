@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStore } from '../state/useStore'
 import type { InterviewMode, InterviewDifficulty, TargetCompany } from '../state/useStore'
 import { extractTextFromPDF } from '../lib/utils/pdfParser'
+import { scrapeJobUrl } from '../lib/utils/scraper'
 
 export function InterviewConfigPanel() {
   const { showSettings, setShowSettings, settings, updateSettings } = useStore()
@@ -13,6 +14,31 @@ export function InterviewConfigPanel() {
   })
   
   const [isUploading, setIsUploading] = useState(false)
+  const [jobUrlInput, setJobUrlInput] = useState('')
+  const [isScraping, setIsScraping] = useState(false)
+
+  const handleTargetRoleScrape = async () => {
+    const input = jobUrlInput.trim()
+    if (!input) return
+    
+    // Check if it's likely a URL
+    if (input.startsWith('http') && !input.includes(' ')) {
+      try {
+        setIsScraping(true)
+        const scrapedText = await scrapeJobUrl(input)
+        updateSettings({ jobDescription: scrapedText })
+        setJobUrlInput('')
+      } catch (err) {
+        alert('Failed to scrape the URL. The site might be blocking access. Try pasting the raw job description text directly into this box instead!')
+      } finally {
+        setIsScraping(false)
+      }
+    } else {
+      // It's raw text
+      updateSettings({ jobDescription: input.slice(0, 15000) })
+      setJobUrlInput('')
+    }
+  }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -86,6 +112,47 @@ export function InterviewConfigPanel() {
                 </div>
               )}
             </div>
+          </div>
+          <hr className="divider" />
+
+          {/* Job URL Scraper */}
+          <div className="setting-group job-scrape-group">
+            <label>🔗 Target Role (Job URL or raw text)</label>
+            <div className="job-scraper">
+              {!settings.jobDescription ? (
+                <div className="job-url-input-wrap">
+                  <textarea 
+                    placeholder="Paste a Greenhouse/Lever job URL, OR paste the raw job description text here..."
+                    value={jobUrlInput}
+                    onChange={(e) => setJobUrlInput(e.target.value)}
+                    disabled={isScraping}
+                    className="job-url-input job-text-area"
+                    rows={3}
+                  />
+                  <button 
+                    className="btn-scrape" 
+                    onClick={handleTargetRoleScrape}
+                    disabled={isScraping || !jobUrlInput}
+                  >
+                    {isScraping ? '⏳...' : 'Save'}
+                  </button>
+                </div>
+              ) : (
+                <div className="resume-loaded job-loaded">
+                  <span className="loaded-icon">🎯</span>
+                  <span className="loaded-text">Target Role Loaded</span>
+                  <button 
+                    className="btn-remove-resume btn-remove-job" 
+                    onClick={() => updateSettings({ jobDescription: null })}
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+            </div>
+            {!settings.jobDescription && (
+              <span className="upload-hint">Paste an active job posting for hyper-specific tailored questions.</span>
+            )}
           </div>
           <hr className="divider" />
 

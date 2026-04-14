@@ -5,6 +5,7 @@ export interface InterviewConfig {
   difficulty: Difficulty
   targetCompany: string
   resumeText: string | null
+  jobDescription: string | null
 }
 
 export interface EvaluationResult {
@@ -31,6 +32,16 @@ CRITICAL INSTRUCTION: The candidate has provided their resume. You MUST prioriti
 `
     : ''
 
+  const jobHint = config.jobDescription
+    ? `
+CANDIDATE'S TARGET ROLE (JOB DESCRIPTION):
+--------------------------------------
+${config.jobDescription}
+--------------------------------------
+CRITICAL INSTRUCTION: The candidate has provided the exact job description they are interviewing for. You MUST test them on the specific technologies, languages, architectures, and soft skills required in this job description. If the job asks for Kubernetes, grill them on Kubernetes. If it asks for leadership, give them a situational leadership question.
+`
+    : ''
+
   const modeHint: Record<string, string> = {
     dsa: 'Focus on Data Structures & Algorithms. Ask about time/space complexity, edge cases, and multiple approaches.',
     'system-design': 'Focus on System Design. Probe for scalability, trade-offs, and real-world constraints.',
@@ -45,6 +56,7 @@ INTERVIEW CONFIGURATION:
 - Difficulty: ${config.difficulty.toUpperCase()} level
 ${companyHint}
 ${resumeHint}
+${jobHint}
 
 AVAILABLE QUESTION BANK (use these as starting points, feel free to adapt):
 ${questionBank}

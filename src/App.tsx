@@ -78,6 +78,7 @@ function App() {
         difficulty: settings.interviewDifficulty,
         targetCompany: settings.targetCompany,
         resumeText: settings.resumeText,
+        jobDescription: settings.jobDescription,
       },
       questionSummary
     )
