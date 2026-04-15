@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { User, Session } from '@supabase/supabase-js'
 import type { QuestionCategory, Difficulty } from '../lib/interview/questionBank'
 
 export type Message = {
@@ -47,6 +48,12 @@ export type FeedbackEntry = {
 }
 
 type AppState = {
+  // Auth state
+  user: User | null
+  setUser: (user: User | null) => void
+  session: Session | null
+  setSession: (session: Session | null) => void
+
   // Chat
   messages: Message[]
   addMessage: (message: Omit<Message, 'id' | 'timestamp'>) => void
@@ -100,6 +107,12 @@ type AppState = {
 export const useStore = create<AppState>()(
   persist(
     (set) => ({
+      // Auth state
+      user: null,
+      setUser: (user) => set({ user }),
+      session: null,
+      setSession: (session) => set({ session }),
+
       // Chat
       messages: [],
       addMessage: (message) =>

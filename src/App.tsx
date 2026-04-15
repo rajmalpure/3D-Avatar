@@ -16,9 +16,14 @@ import {
   parseInterviewerResponse,
 } from './lib/interview/interviewerLLM'
 import { QUESTION_BANK } from './lib/interview/questionBank'
+import { Auth } from './components/Auth'
+import { supabase } from './lib/supabaseClient'
 
 function App() {
   const {
+    user,
+    setUser,
+    setSession,
     settings,
     setShowSettings,
     addMessage,
@@ -54,12 +59,33 @@ function App() {
     llmProviderRef.current = createLLMProvider(settings.llmProvider)
   }, [settings.llmProvider])
 
+  // Initialize Supabase Auth Session
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [setSession, setUser])
+
   // Splash Screen
   useEffect(() => {
     const t1 = setTimeout(() => setSplashPhase('ready'), 1800)
     const t2 = setTimeout(() => setShowSplash(false), 3200)
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [])
+
+  if (!user) {
+    return <Auth />
+  }
 
   // ── Build system prompt from current interview config ──────────────
   const buildSystemPrompt = () => {
@@ -376,6 +402,20 @@ function App() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <circle cx="12" cy="12" r="3" strokeWidth="2" />
                   <path d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.2 4.2l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.2-4.2l4.2-4.2" strokeWidth="2" />
+                </svg>
+              </button>
+
+              <button
+                id="btn-logout"
+                className="btn-icon-action"
+                onClick={() => supabase.auth.signOut()}
+                title="Log Out"
+                style={{ borderColor: 'rgba(255,82,82,0.4)', color: '#ff5252' }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
                 </svg>
               </button>
             </div>
