@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient'
-import { useStore } from '../state/useStore'
 
 export const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true)
