@@ -2,7 +2,6 @@
 
 A production-ready, interactive **3D AI Interview Coach** designed to conduct rigorous technical interviews for software and AI engineering roles. Built with React, Three.js, and Google Gemini API.
 
-> **Live Demo:** [PrepMate 3D on Vercel](https://3-d-avatar-rose.vercel.app/)
 
 ![Version](https://img.shields.io/badge/version-2.0.0-emerald.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
