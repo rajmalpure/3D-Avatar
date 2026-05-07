@@ -37,6 +37,16 @@ body {
   overflow: hidden;
 }
 
+/* When landing page is active, allow full-page scrolling */
+body.lp-active {
+  overflow: auto;
+}
+body.lp-active .app {
+  overflow: visible;
+  height: auto;
+  min-height: 100vh;
+}
+
 #root { width: 100vw; height: 100vh; }
 
 /* ─── App Layout ────────────────────────────────────────────── */

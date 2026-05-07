@@ -17,18 +17,11 @@ export function AvatarModel({ modelPath = '/avatar-default.glb', mousePosition }
   const rightEyeRef = useRef<THREE.Mesh>(null!)
   const gltfGroupRef = useRef<THREE.Group>(null!)
   
-  const [useGeometric, setUseGeometric] = useState(false)
-  const { currentViseme, avatarExpression, isAvatarSpeaking } = useStore()
+  // Load GLTF model - handled by Suspense in AvatarScene
+  const gltf = useGLTF(modelPath) as any
+  const [useGeometric] = useState(false) // Reserved for explicit fallback if needed
   
-  // Try to load GLTF model
-  let gltf: any
-  try {
-    gltf = useGLTF(modelPath)
-  } catch (error) {
-    console.warn('Failed to load GLTF model, using geometric fallback:', error)
-    if (!useGeometric) setUseGeometric(true)
-    gltf = null
-  }
+  const { currentViseme, avatarExpression, isAvatarSpeaking } = useStore()
   
   // Animation loop
   useFrame((state) => {
@@ -140,11 +133,15 @@ export function AvatarModel({ modelPath = '/avatar-default.glb', mousePosition }
     }
   })
   
-  // If GLTF loaded successfully and we're not using geometric fallback
+  // Ensure the model is centered and visible
+  const modelScale = 1.6
+  const modelPosition: [number, number, number] = [0, -1.2, 0]
+
+  // If GLTF loaded successfully
   if (gltf && !useGeometric) {
     return (
-      <group ref={gltfGroupRef}>
-        <primitive object={gltf.scene} scale={1.5} />
+      <group ref={gltfGroupRef} position={modelPosition}>
+        <primitive object={gltf.scene} scale={modelScale} />
       </group>
     )
   }

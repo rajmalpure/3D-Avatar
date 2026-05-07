@@ -17,6 +17,7 @@ import {
 } from './lib/interview/interviewerLLM'
 import { QUESTION_BANK } from './lib/interview/questionBank'
 import { Auth } from './components/Auth'
+import { LandingPage } from './components/LandingPage'
 import { supabase } from './lib/supabaseClient'
 
 function App() {
@@ -48,6 +49,10 @@ function App() {
   const [showSplash, setShowSplash] = useState(true)
   const [splashPhase, setSplashPhase] = useState<'loading' | 'ready'>('loading')
   const [showTranscript, setShowTranscript] = useState(false)
+  // 'landing' | 'auth' — synced with browser history so back button works
+  const [preAuthView, setPreAuthView] = useState<'landing' | 'auth'>(
+    () => (window.history.state?.preAuthView ?? 'landing')
+  )
 
   const ttsProviderRef = useRef<TTSProvider | null>(null)
   const llmProviderRef = useRef<LLMProvider | null>(null)
@@ -83,8 +88,26 @@ function App() {
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [])
 
-  if (!user) {
-    return <Auth />
+  // Sync browser back/forward button with preAuthView state
+  useEffect(() => {
+    // Set initial history state so back from 'auth' works
+    window.history.replaceState({ preAuthView }, '', window.location.href)
+
+    const handlePopState = (e: PopStateEvent) => {
+      if (!user) {
+        const view = (e.state?.preAuthView ?? 'landing') as 'landing' | 'auth'
+        setPreAuthView(view)
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
+
+  // Navigate to auth and push a history entry so back button works
+  const goToAuth = () => {
+    window.history.pushState({ preAuthView: 'auth' }, '', window.location.href)
+    setPreAuthView('auth')
   }
 
   // ── Build system prompt from current interview config ──────────────
@@ -346,107 +369,119 @@ function App() {
 
       {/* ── Main App ───────────────────────────────────────── */}
       <div className="app">
-        {/* Full-screen 3D avatar */}
-        <div className="avatar-container full-screen">
-          <AvatarScene />
-        </div>
-
-        {/* HUD overlay */}
-        <div className="ui-layer">
-
-          {/* Top bar */}
-          <div className="hud-top-bar">
-            <div className="hud-brand">
-              <span className="hud-brand-icon">🎯</span>
-              <h1 className="hud-logo">PrepMate 3D</h1>
+        {!user ? (
+          preAuthView === 'landing' ? (
+            <LandingPage
+              onGetStarted={goToAuth}
+              onLogin={goToAuth}
+            />
+          ) : (
+            <Auth />
+          )
+        ) : (
+          <>
+            {/* Full-screen 3D avatar */}
+            <div className="avatar-container full-screen">
+              <AvatarScene />
             </div>
 
-            <div className="hud-top-actions">
-              {!sessionActive ? (
-                <button
-                  id="btn-start-interview"
-                  className="btn-start-interview"
-                  onClick={handleStartInterview}
-                  disabled={isProcessing}
-                >
-                  🚀 Start Interview
-                </button>
-              ) : (
-                <button
-                  id="btn-end-interview"
-                  className="btn-end-interview"
-                  onClick={handleEndInterview}
-                  disabled={isProcessing}
-                >
-                  🏁 End Session
-                </button>
+            {/* Main Interactive UI HUD */}
+            <div className="ui-layer">
+              {/* Top bar */}
+              <div className="hud-top-bar">
+                <div className="hud-brand">
+                  <span className="hud-brand-icon">🎯</span>
+                  <h1 className="hud-logo">PrepMate 3D</h1>
+                </div>
+
+                <div className="hud-top-actions">
+                  {!sessionActive ? (
+                    <button
+                      id="btn-start-interview"
+                      className="btn-start-interview"
+                      onClick={handleStartInterview}
+                      disabled={isProcessing}
+                    >
+                      🚀 Start Interview
+                    </button>
+                  ) : (
+                    <button
+                      id="btn-end-interview"
+                      className="btn-end-interview"
+                      onClick={handleEndInterview}
+                      disabled={isProcessing}
+                    >
+                      🏁 End Session
+                    </button>
+                  )}
+
+                  <button
+                    id="btn-toggle-transcript"
+                    className={`btn-icon-action ${showTranscript ? 'active' : ''}`}
+                    onClick={() => setShowTranscript(!showTranscript)}
+                    title="Toggle Transcript"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+
+                  <button
+                    id="btn-settings"
+                    className="btn-icon-action"
+                    onClick={() => setShowSettings(true)}
+                    title="Interview Settings"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <circle cx="12" cy="12" r="3" strokeWidth="2" />
+                      <path d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.2 4.2l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.2-4.2l4.2-4.2" strokeWidth="2" />
+                    </svg>
+                  </button>
+
+                  <button
+                    id="btn-logout"
+                    className="btn-icon-action"
+                    onClick={() => supabase.auth.signOut()}
+                    title="Log Out"
+                    style={{ borderColor: 'rgba(255,82,82,0.4)', color: '#ff5252' }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                      <polyline points="16 17 21 12 16 7"></polyline>
+                      <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Left: Interview Dashboard */}
+              <div className="hud-left-panel">
+                <InterviewDashboard />
+              </div>
+
+              {/* Right: Transcript */}
+              {showTranscript && (
+                <aside className="chat-container glass-panel">
+                  <TranscriptPanel onSendMessage={handleSendMessage} />
+                </aside>
               )}
 
-              <button
-                id="btn-toggle-transcript"
-                className={`btn-icon-action ${showTranscript ? 'active' : ''}`}
-                onClick={() => setShowTranscript(!showTranscript)}
-                title="Toggle Transcript"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-
-              <button
-                id="btn-settings"
-                className="btn-icon-action"
-                onClick={() => setShowSettings(true)}
-                title="Interview Settings"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <circle cx="12" cy="12" r="3" strokeWidth="2" />
-                  <path d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.2 4.2l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.2-4.2l4.2-4.2" strokeWidth="2" />
-                </svg>
-              </button>
-
-              <button
-                id="btn-logout"
-                className="btn-icon-action"
-                onClick={() => supabase.auth.signOut()}
-                title="Log Out"
-                style={{ borderColor: 'rgba(255,82,82,0.4)', color: '#ff5252' }}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                  <polyline points="16 17 21 12 16 7"></polyline>
-                  <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-              </button>
+              {/* Bottom: Mic */}
+              <div className="mic-container floating-mic">
+                <MicButton
+                  onTranscript={handleTranscript}
+                  onStartListening={() => {
+                    if (ttsProviderRef.current) ttsProviderRef.current.stop()
+                    if (lipSyncIntervalRef.current) clearInterval(lipSyncIntervalRef.current)
+                    setIsAvatarSpeaking(false)
+                    setAvatarExpression('neutral')
+                    useStore.getState().setCurrentViseme(0)
+                  }}
+                />
+              </div>
             </div>
-          </div>
-
-          {/* Left: Interview Dashboard */}
-          <div className="hud-left-panel">
-            <InterviewDashboard />
-          </div>
-
-          {/* Right: Transcript */}
-          {showTranscript && (
-            <aside className="chat-container glass-panel">
-              <TranscriptPanel onSendMessage={handleSendMessage} />
-            </aside>
-          )}
-
-          {/* Bottom: Mic */}
-          <div className="mic-container floating-mic">
-            <MicButton
-              onTranscript={handleTranscript}
-              onStartListening={() => {
-                if (ttsProviderRef.current) ttsProviderRef.current.stop()
-                if (lipSyncIntervalRef.current) clearInterval(lipSyncIntervalRef.current)
-                setIsAvatarSpeaking(false)
-                setAvatarExpression('neutral')
-                useStore.getState().setCurrentViseme(0)
-              }}
-            />
-          </div>
-        </div>
+          </>
+        )}
 
         {/* Config panel */}
         <InterviewConfigPanel />
