@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrepMate — Sign Up</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <div id="toast-container"></div>
+
+    <div class="auth-page-root">
+        <div class="auth-card-wrapper">
+            <header class="auth-logo-header">
+                <span class="auth-logo-text">prepmate</span>
+            </header>
+
+            <div id="auth-card" class="auth-card-container">
+                <h1 id="auth-title" class="auth-card-title">Create your account</h1>
+                <p id="auth-subtitle" class="auth-card-subtitle">Start practicing in under 60 seconds</p>
+
+                <div id="error-msg" class="auth-error-msg hidden"></div>
+
+                <form id="signup-form" class="auth-form">
+                    <div class="auth-form-group" id="name-group">
+                        <label class="auth-label">Full name</label>
+                        <input class="auth-input" type="text" id="fullName" placeholder="Arjun Kumar" required>
+                        <span class="validation-msg"></span>
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-label">Email</label>
+                        <input class="auth-input" type="email" id="email" placeholder="you@example.com" required>
+                        <span class="validation-msg"></span>
+                    </div>
+                    
+                    <div class="auth-form-group">
+                        <label class="auth-label">Password</label>
+                        <div class="password-input-wrapper">
+                            <input class="auth-input" type="password" id="password" placeholder="••••••••" required>
+                            <button type="button" id="toggle-password" class="toggle-password">
+                                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
+                        <span class="validation-msg"></span>
+                    </div>
+                    
+                    <button type="submit" id="submit-btn" class="auth-submit-btn">
+                        <span class="btn-text">Get started free →</span>
+                        <div class="btn-loader hidden"></div>
+                    </button>
+                </form>
+
+                <div class="auth-divider">
+                    <div class="auth-divider-line"></div>
+                    <span class="auth-divider-text">or</span>
+                    <div class="auth-divider-line"></div>
+                </div>
+
+                <div id="g_id_onload"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID"
+                     data-callback="handleCredentialResponse"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-size="large"
+                     data-theme="outline"
+                     data-text="continue_with"
+                     data-shape="rectangular"
+                     data-logo_alignment="left"
+                     data-width="336">
+                </div>
+
+                <footer class="auth-card-footer">
+                    <p class="auth-footer-text">
+                        <span id="toggle-text">Already have an account?</span>
+                        <button id="toggle-auth" class="auth-footer-link">Log in</button>
+                    </p>
+                </footer>
+            </div>
+
+            <!-- Logged In State (Dashboard placeholder) -->
+            <div id="dashboard-view" class="auth-card-container hidden">
+                <h1 class="auth-card-title">Welcome, <span id="user-name"></span>!</h1>
+                <p class="auth-card-subtitle">Redirecting to your dashboard...</p>
+                <div class="dashboard-loader"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -48,6 +48,7 @@ function App() {
 
   const [showSplash, setShowSplash] = useState(true)
   const [splashPhase, setSplashPhase] = useState<'loading' | 'ready'>('loading')
+  const [isAuthChecking, setIsAuthChecking] = useState(true)
   const [showTranscript, setShowTranscript] = useState(false)
   // 'landing' | 'auth' — synced with browser history so back button works
   const [preAuthView, setPreAuthView] = useState<'landing' | 'auth'>(
@@ -66,16 +67,49 @@ function App() {
 
   // Initialize Supabase Auth Session
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-    })
+    console.log('🔄 Initializing Auth check...');
+    
+    const checkSession = async () => {
+      try {
+        // Parse error from URL if present
+        const params = new URLSearchParams(window.location.search);
+        const urlError = params.get('error_description');
+        if (urlError) {
+          console.error('OAuth Error from URL:', urlError);
+          // We can't easily set errorMsg here as it's in Auth.tsx, 
+          // so we'll log it clearly.
+        }
+
+        const { data: { session } } = await supabase.auth.getSession()
+        console.log('Initial session:', session?.user?.email)
+        setSession(session)
+        setUser(session?.user ?? null)
+        
+        if (session?.user) {
+          setPreAuthView('landing')
+          // Clear the error from URL without refreshing
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } catch (err) {
+        console.error('Error getting session:', err)
+      } finally {
+        setIsAuthChecking(false)
+      }
+    }
+
+    checkSession()
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
+      setIsAuthChecking(false)
+
+      console.log('Auth state changed to:', event)
+      console.log('User is now:', session?.user?.email ?? 'null')
+      console.log('Render will show:', 
+        session?.user ? 'AVATAR PAGE ✅' : 'AUTH PAGE ❌')
     })
 
     return () => subscription.unsubscribe()
@@ -108,6 +142,12 @@ function App() {
   const goToAuth = () => {
     window.history.pushState({ preAuthView: 'auth' }, '', window.location.href)
     setPreAuthView('auth')
+  }
+
+  // Navigate back to landing and push a history entry
+  const goBackToLanding = () => {
+    window.history.pushState({ preAuthView: 'landing' }, '', window.location.href)
+    setPreAuthView('landing')
   }
 
   // ── Build system prompt from current interview config ──────────────
@@ -369,14 +409,16 @@ function App() {
 
       {/* ── Main App ───────────────────────────────────────── */}
       <div className="app">
-        {!user ? (
+        {isAuthChecking ? (
+          null // Keep showing splash
+        ) : !user ? (
           preAuthView === 'landing' ? (
             <LandingPage
               onGetStarted={goToAuth}
               onLogin={goToAuth}
             />
           ) : (
-            <Auth />
+            <Auth onBack={goBackToLanding} />
           )
         ) : (
           <>
