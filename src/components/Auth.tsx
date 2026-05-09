@@ -79,7 +79,7 @@ export const Auth: React.FC<AuthProps> = ({ onBack }) => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'http://localhost:3000/'
+          redirectTo: window.location.origin + '/'
         }
       })
       if (error) throw error
