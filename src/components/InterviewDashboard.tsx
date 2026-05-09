@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '../state/useStore'
 
+const TIPS = [
+  'Use the STAR method for behavioral answers',
+  'Speak at 130–150 WPM for best clarity',
+  'Pause 2–3 seconds before answering — it\'s okay',
+  'Quantify your achievements with numbers',
+  'Make eye contact with the camera, not the screen',
+]
+
 export function InterviewDashboard() {
   const {
     sessionActive,
@@ -12,6 +20,8 @@ export function InterviewDashboard() {
   } = useStore()
 
   const [elapsed, setElapsed] = useState(0)
+  const [tipIndex, setTipIndex] = useState(0)
+  const [tipVisible, setTipVisible] = useState(true)
 
   useEffect(() => {
     if (!sessionActive || !sessionStartTime) {
@@ -24,10 +34,27 @@ export function InterviewDashboard() {
     return () => clearInterval(interval)
   }, [sessionActive, sessionStartTime])
 
+  // Rotate tips every 8 seconds with fade
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTipVisible(false)
+      setTimeout(() => {
+        setTipIndex(i => (i + 1) % TIPS.length)
+        setTipVisible(true)
+      }, 400)
+    }, 8000)
+    return () => clearInterval(interval)
+  }, [])
+
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60)
     const sec = s % 60
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+  }
+
+  const formatDuration = (s: number) => {
+    const m = Math.floor(s / 60)
+    return `${m}m`
   }
 
   const getGrade = (score: number) => {
@@ -53,6 +80,8 @@ export function InterviewDashboard() {
 
   const grade = getGrade(sessionScore)
   const scorePercent = Math.min(sessionScore, 100)
+  const radius = 30
+  const circumference = 2 * Math.PI * radius
 
   if (!sessionActive) {
     return (
@@ -64,6 +93,61 @@ export function InterviewDashboard() {
           <div className="idle-badges">
             <span className="badge badge-mode">{modeLabel[settings.interviewMode]}</span>
             <span className="badge badge-diff">{diffLabel[settings.interviewDifficulty]}</span>
+          </div>
+        </div>
+
+        {/* Score ring in idle state */}
+        <div className="score-ring-section">
+          <div className="score-ring-wrapper">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r={radius} fill="none" stroke="#1e2433" strokeWidth="6" />
+              <circle
+                cx="40" cy="40" r={radius}
+                fill="none"
+                stroke="#7c3aed"
+                strokeWidth="6"
+                strokeDasharray={circumference}
+                strokeDashoffset={circumference * (1 - scorePercent / 100)}
+                strokeLinecap="round"
+                transform="rotate(-90 40 40)"
+                style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+              />
+            </svg>
+            <div className="score-ring-overlay">
+              <span className="score-ring-number">{sessionScore}</span>
+            </div>
+          </div>
+          <div className="score-ring-label">Session score</div>
+        </div>
+
+        {/* Live Metrics 2x2 */}
+        <div className="live-metrics-grid">
+          <div className="metric-card">
+            <span className="metric-value" style={{ color: '#22c55e' }}>{questionCount}</span>
+            <span className="metric-label">Questions</span>
+          </div>
+          <div className="metric-card">
+            <span className="metric-value" style={{ color: '#f59e0b' }}>{sessionActive ? formatDuration(elapsed) : '0m'}</span>
+            <span className="metric-label">Duration</span>
+          </div>
+          <div className="metric-card">
+            <span className="metric-value" style={{ color: '#60a5fa' }}>85%</span>
+            <span className="metric-label">Clarity</span>
+          </div>
+          <div className="metric-card">
+            <span className="metric-value" style={{ color: '#c4b5fd' }}>68%</span>
+            <span className="metric-label">Depth</span>
+          </div>
+        </div>
+
+        {/* Rotating Tips */}
+        <div className="rotating-tip-card">
+          <div
+            className="rotating-tip-text"
+            style={{ opacity: tipVisible ? 1 : 0, transition: 'opacity 0.4s ease' }}
+          >
+            <span className="tip-dot">●</span>
+            {TIPS[tipIndex]}
           </div>
         </div>
       </aside>
@@ -101,21 +185,23 @@ export function InterviewDashboard() {
         </div>
       </div>
 
-      {/* Stats row */}
-      <div className="stat-row">
-        <div className="stat-item">
-          <span className="stat-value">{questionCount}</span>
-          <span className="stat-label">Questions</span>
+      {/* Live Metrics 2x2 */}
+      <div className="live-metrics-grid">
+        <div className="metric-card">
+          <span className="metric-value" style={{ color: '#22c55e' }}>{questionCount}</span>
+          <span className="metric-label">Questions</span>
         </div>
-        <div className="stat-divider" />
-        <div className="stat-item">
-          <span className="stat-value">{modeLabel[settings.interviewMode]}</span>
-          <span className="stat-label">Mode</span>
+        <div className="metric-card">
+          <span className="metric-value" style={{ color: '#f59e0b' }}>{formatDuration(elapsed)}</span>
+          <span className="metric-label">Duration</span>
         </div>
-        <div className="stat-divider" />
-        <div className="stat-item">
-          <span className="stat-value">{diffLabel[settings.interviewDifficulty]}</span>
-          <span className="stat-label">Level</span>
+        <div className="metric-card">
+          <span className="metric-value" style={{ color: '#60a5fa' }}>85%</span>
+          <span className="metric-label">Clarity</span>
+        </div>
+        <div className="metric-card">
+          <span className="metric-value" style={{ color: '#c4b5fd' }}>68%</span>
+          <span className="metric-label">Depth</span>
         </div>
       </div>
 
@@ -127,15 +213,15 @@ export function InterviewDashboard() {
         </div>
       )}
 
-      {/* Tips */}
-      <div className="tips-section">
-        <p className="tips-title">💡 Interview Tips</p>
-        <ul className="tips-list">
-          <li>Think aloud — share your reasoning</li>
-          <li>Clarify requirements before coding</li>
-          <li>Discuss trade-offs and complexity</li>
-          <li>Use the STAR method for behavioral</li>
-        </ul>
+      {/* Rotating Tips */}
+      <div className="rotating-tip-card">
+        <div
+          className="rotating-tip-text"
+          style={{ opacity: tipVisible ? 1 : 0, transition: 'opacity 0.4s ease' }}
+        >
+          <span className="tip-dot">●</span>
+          {TIPS[tipIndex]}
+        </div>
       </div>
     </aside>
   )

@@ -19,6 +19,7 @@ import { QUESTION_BANK } from './lib/interview/questionBank'
 import { Auth } from './components/Auth'
 import { LandingPage } from './components/LandingPage'
 import { supabase } from './lib/supabaseClient'
+import { useMobile } from './lib/useMobile'
 
 function App() {
   const {
@@ -44,12 +45,18 @@ function App() {
     setSessionStartTime,
     showSessionSummary,
     setShowSessionSummary,
+    isAvatarSpeaking,
+    isListening,
   } = useStore()
+
+  const { isMobile, isTablet } = useMobile()
 
   const [showSplash, setShowSplash] = useState(true)
   const [splashPhase, setSplashPhase] = useState<'loading' | 'ready'>('loading')
   const [isAuthChecking, setIsAuthChecking] = useState(true)
   const [showTranscript, setShowTranscript] = useState(false)
+  const [showMobileStats, setShowMobileStats] = useState(false)
+  const [showMobileChat, setShowMobileChat] = useState(false)
   // 'landing' | 'auth' — synced with browser history so back button works
   const [preAuthView, setPreAuthView] = useState<'landing' | 'auth'>(
     () => (window.history.state?.preAuthView ?? 'landing')
@@ -433,10 +440,27 @@ function App() {
               <div className="hud-top-bar">
                 <div className="hud-brand">
                   <span className="hud-brand-icon">🎯</span>
-                  <h1 className="hud-logo">PrepMate 3D</h1>
+                  <h1 className={`hud-logo ${isMobile ? 'hide-mobile' : ''}`}>PrepMate 3D</h1>
                 </div>
 
                 <div className="hud-top-actions">
+                  {/* User pill */}
+                  {(() => {
+                    const rawName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || ''
+                    const parts = rawName.trim().split(' ')
+                    const initials = parts.length >= 2
+                      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+                      : rawName.slice(0, 2).toUpperCase()
+                    const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || ''
+                    return (
+                      <div className="user-pill">
+                        <div className="user-avatar-pill">{initials}</div>
+                        <span className={`user-name-pill ${isMobile ? 'hide-mobile' : ''}`}>{displayName}</span>
+                        <button className="user-signout-btn" onClick={() => supabase.auth.signOut()}>Sign out</button>
+                      </div>
+                    )
+                  })()}
+
                   {!sessionActive ? (
                     <button
                       id="btn-start-interview"
@@ -444,7 +468,8 @@ function App() {
                       onClick={handleStartInterview}
                       disabled={isProcessing}
                     >
-                      🚀 Start Interview
+                      <span>🚀</span>
+                      <span className={isMobile ? 'hide-mobile' : ''}>Start Interview</span>
                     </button>
                   ) : (
                     <button
@@ -453,13 +478,14 @@ function App() {
                       onClick={handleEndInterview}
                       disabled={isProcessing}
                     >
-                      🏁 End Session
+                      <span>🏁</span>
+                      <span className={isMobile ? 'hide-mobile' : ''}>End Session</span>
                     </button>
                   )}
 
                   <button
                     id="btn-toggle-transcript"
-                    className={`btn-icon-action ${showTranscript ? 'active' : ''}`}
+                    className={`btn-icon-action ${showTranscript ? 'active' : ''} ${isMobile ? 'hide-mobile' : ''}`}
                     onClick={() => setShowTranscript(!showTranscript)}
                     title="Toggle Transcript"
                   >
@@ -479,48 +505,91 @@ function App() {
                       <path d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.2 4.2l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.2-4.2l4.2-4.2" strokeWidth="2" />
                     </svg>
                   </button>
-
-                  <button
-                    id="btn-logout"
-                    className="btn-icon-action"
-                    onClick={() => supabase.auth.signOut()}
-                    title="Log Out"
-                    style={{ borderColor: 'rgba(255,82,82,0.4)', color: '#ff5252' }}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                      <polyline points="16 17 21 12 16 7"></polyline>
-                      <line x1="21" y1="12" x2="9" y2="12"></line>
-                    </svg>
-                  </button>
                 </div>
               </div>
 
-              {/* Left: Interview Dashboard */}
-              <div className="hud-left-panel">
+              {/* Emotion indicator above avatar */}
+              {(() => {
+                let emotionLabel = 'Ready'
+                let emotionClass = 'emotion-ready'
+                if (isAvatarSpeaking) { emotionLabel = 'Speaking'; emotionClass = 'emotion-speaking' }
+                else if (isProcessing) { emotionLabel = 'Thinking'; emotionClass = 'emotion-thinking' }
+                else if (isListening) { emotionLabel = 'Listening'; emotionClass = 'emotion-listening' }
+                return (
+                  <div className="emotion-indicator">
+                    <div className={`emotion-dot ${emotionClass}`} />
+                    <span>{emotionLabel}</span>
+                  </div>
+                )
+              })()}
+
+              {/* Left: Interview Dashboard — hidden on mobile by default */}
+              <div className={`hud-left-panel ${isMobile ? 'hide-mobile' : ''} ${isTablet && !isMobile ? '' : ''}`}>
                 <InterviewDashboard />
               </div>
 
-              {/* Right: Transcript */}
-              {showTranscript && (
+              {/* Right: Transcript — hidden on mobile by default */}
+              {showTranscript && !isMobile && (
                 <aside className="chat-container glass-panel">
                   <TranscriptPanel onSendMessage={handleSendMessage} />
                 </aside>
               )}
 
-              {/* Bottom: Mic */}
-              <div className="mic-container floating-mic">
-                <MicButton
-                  onTranscript={handleTranscript}
-                  onStartListening={() => {
-                    if (ttsProviderRef.current) ttsProviderRef.current.stop()
-                    if (lipSyncIntervalRef.current) clearInterval(lipSyncIntervalRef.current)
-                    setIsAvatarSpeaking(false)
-                    setAvatarExpression('neutral')
-                    useStore.getState().setCurrentViseme(0)
-                  }}
-                />
-              </div>
+              {/* Bottom: Mic — desktop */}
+              {!isMobile && (
+                <div className="mic-container floating-mic">
+                  <MicButton
+                    onTranscript={handleTranscript}
+                    onStartListening={() => {
+                      if (ttsProviderRef.current) ttsProviderRef.current.stop()
+                      if (lipSyncIntervalRef.current) clearInterval(lipSyncIntervalRef.current)
+                      setIsAvatarSpeaking(false)
+                      setAvatarExpression('neutral')
+                      useStore.getState().setCurrentViseme(0)
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Mobile Layout: 3-button floating bar */}
+              {isMobile && (
+                <div className="mobile-bottom-bar">
+                  <button className="mobile-fab" onClick={() => setShowMobileStats(!showMobileStats)}>📊</button>
+                  <div className="mobile-mic-center">
+                    <MicButton
+                      onTranscript={handleTranscript}
+                      onStartListening={() => {
+                        if (ttsProviderRef.current) ttsProviderRef.current.stop()
+                        if (lipSyncIntervalRef.current) clearInterval(lipSyncIntervalRef.current)
+                        setIsAvatarSpeaking(false)
+                        setAvatarExpression('neutral')
+                        useStore.getState().setCurrentViseme(0)
+                      }}
+                    />
+                  </div>
+                  <button className="mobile-fab" onClick={() => setShowMobileChat(!showMobileChat)}>💬</button>
+                </div>
+              )}
+
+              {/* Mobile Bottom Sheet: Stats */}
+              {isMobile && showMobileStats && (
+                <div className="mobile-bottom-sheet" onClick={(e) => { if (e.target === e.currentTarget) setShowMobileStats(false) }}>
+                  <div className="mobile-sheet-content">
+                    <div className="mobile-sheet-handle" />
+                    <InterviewDashboard />
+                  </div>
+                </div>
+              )}
+
+              {/* Mobile Bottom Sheet: Chat */}
+              {isMobile && showMobileChat && (
+                <div className="mobile-bottom-sheet" onClick={(e) => { if (e.target === e.currentTarget) setShowMobileChat(false) }}>
+                  <div className="mobile-sheet-content">
+                    <div className="mobile-sheet-handle" />
+                    <TranscriptPanel onSendMessage={handleSendMessage} />
+                  </div>
+                </div>
+              )}
             </div>
           </>
         )}
