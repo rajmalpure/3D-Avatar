@@ -5,6 +5,13 @@ A production-ready, interactive **3D AI Interview Coach** designed to conduct ri
 
 ![Version](https://img.shields.io/badge/version-2.0.0-emerald.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-prepmate3d.vercel.app-brightgreen?logo=vercel)](https://prepmate3d.vercel.app)
+
+## 🌐 Live Demo
+
+> **[https://prepmate3d.vercel.app](https://prepmate3d.vercel.app)**
+
+Sign in with Google and start your AI-powered mock interview instantly — no setup required.
 
 ## ✨ Overview
 
