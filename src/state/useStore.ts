@@ -156,7 +156,7 @@ export const useStore = create<AppState>()(
       // Settings
       settings: {
         ttsProvider: (import.meta.env.VITE_TTS_PROVIDER || 'webspeech') as TTSProvider,
-        llmProvider: (import.meta.env.VITE_LLM_PROVIDER || 'local') as LLMProvider,
+        llmProvider: (import.meta.env.VITE_LLM_PROVIDER || 'gemini') as LLMProvider,
         ttsVolume: 1.0,
         ttsSpeed: 1.0,
         ttsVoice: '',
@@ -214,8 +214,30 @@ export const useStore = create<AppState>()(
       name: 'prepmate-storage',
       partialize: (state) =>
         ({
-          settings: state.settings,
+          // Only persist UI preferences, NOT llmProvider
+          // so env variable always takes effect on reload
+          settings: {
+            ttsVolume: state.settings.ttsVolume,
+            ttsSpeed: state.settings.ttsSpeed,
+            ttsVoice: state.settings.ttsVoice,
+            avatarModel: state.settings.avatarModel,
+            interviewMode: state.settings.interviewMode,
+            interviewDifficulty: state.settings.interviewDifficulty,
+            targetCompany: state.settings.targetCompany,
+            resumeText: state.settings.resumeText,
+            jobDescription: state.settings.jobDescription,
+          },
         } as unknown as AppState),
+      merge: (persisted: unknown, current: AppState): AppState => ({
+        ...current,
+        settings: {
+          ...current.settings,
+          ...((persisted as AppState)?.settings ?? {}),
+          // Always override llmProvider and ttsProvider from env
+          llmProvider: (import.meta.env.VITE_LLM_PROVIDER || 'gemini') as LLMProvider,
+          ttsProvider: (import.meta.env.VITE_TTS_PROVIDER || 'webspeech') as TTSProvider,
+        },
+      }),
     }
   )
 )
